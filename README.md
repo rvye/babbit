@@ -1,2 +1,2 @@
 # rl
-Rocket League Bot
+rocket league bot
