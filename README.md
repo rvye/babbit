@@ -1,4 +1,4 @@
-# rl
+# babbit
 rocket league bot
 
-literally just demos people
+b(ump)abbit
