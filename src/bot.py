@@ -39,59 +39,40 @@ class MyBot(BaseAgent):
         # Gather some information about our car and the ball
         
         my_car = packet.game_cars[self.index]
+        other_car = packet.game_cars[0]
+        other_car_location = Vec3(other_car.physics.location)
+
         car_location = Vec3(my_car.physics.location)
         car_velocity = Vec3(my_car.physics.velocity)
         ball_location = Vec3(packet.game_ball.physics.location)
         speed = float(str({car_velocity.length():.1}).replace(': 0.1','').replace('{','').replace('}',''))
 
         # By default we will chase the ball, but target_location can be changed later
-        target_location = ball_location
-
-        if car_location.dist(ball_location) > 1500:
-            # We're far away from the ball, let's try to lead it a little bit
-            ball_prediction = self.get_ball_prediction_struct()  # This can predict bounces, etc
-            ball_in_future = find_slice_at_time(ball_prediction, packet.game_info.seconds_elapsed + 2)
-
-            # ball_in_future might be None if we don't have an adequate ball prediction right now, like during
-            # replays, so check it to avoid errors.
-            if ball_in_future is not None:
-                target_location = Vec3(ball_in_future.physics.location)
-                self.renderer.draw_line_3d(ball_location, target_location, self.renderer.cyan())
 
         # Draw some things to help understand what the bot is thinking
-        self.renderer.draw_line_3d(car_location, target_location, self.renderer.white())
-        self.renderer.draw_string_3d(car_location, 0, 0, str({car_velocity.length():.1}).replace(': 0.1','').replace('{','').replace('}',''), self.renderer.white())
-        self.renderer.draw_rect_3d(target_location, 8, 8, True, self.renderer.cyan(), centered=True)
+        self.renderer.draw_line_3d(car_location, other_car_location, self.renderer.white())
+        self.renderer.draw_string_3d(car_location, 1, 1, str({car_velocity.length():.1}).replace(': 0.1','').replace('{','').replace('}',''), self.renderer.white())
 
-        if 750 < car_velocity.length() < 800:
-            # We'll do a front flip if the car is moving at a certain speed.
-            return self.begin_front_flip(packet)
             
-       
-        
         
         controls = SimpleControllerState()
-        controls.steer = steer_toward_target(my_car, target_location) 
         
         
         # protect against rule 1s
         if speed < 30 and speed > 1 and speed != 0.2712231234294472:
             for i in range(500):
                 controls.throttle = -1.0
-                controls.steer = steer_toward_target(my_car, ball_location)
-        elif speed == 0.2712231234294472:
-            controls.throttle = 1.0
-            controls.steer = steer_toward_target(my_car, target_location)
+                controls.steer = steer_toward_target(my_car, other_car_location)
         else:
             controls.throttle = 1.0
-            controls.steer = steer_toward_target(my_car, target_location)
+            controls.steer = steer_toward_target(my_car, other_car_location)
             
-        # boosting if certain dist from ball
-        if car_location.dist(ball_location) > 500:
+        if car_location.dist(other_car_location) < 1000:
             controls.boost = 1  
-        # You can set more controls if you want, like controls.boost.
-        print(str(speed))
-        
+        elif car_location.dist(other_car_location) > 2000 and 750 < car_velocity.length() < 800:
+            return self.begin_front_flip(packet)
+        else:
+            controls.boost = 0        
         return controls
 
     def begin_front_flip(self, packet):
