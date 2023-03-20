@@ -47,16 +47,10 @@ class MyBot(BaseAgent):
         ball_location = Vec3(packet.game_ball.physics.location)
         speed = float(str({car_velocity.length():.1}).replace(': 0.1','').replace('{','').replace('}',''))
 
-        # By default we will chase the ball, but target_location can be changed later
-
-        # Draw some things to help understand what the bot is thinking
+        # Draw the bot's path
         self.renderer.draw_line_3d(car_location, other_car_location, self.renderer.white())
-        self.renderer.draw_string_3d(car_location, 1, 1, str({car_velocity.length():.1}).replace(': 0.1','').replace('{','').replace('}',''), self.renderer.white())
-
-            
         
         controls = SimpleControllerState()
-        
         
         # protect against rule 1s
         if speed < 30 and speed > 1 and speed != 0.2712231234294472:
